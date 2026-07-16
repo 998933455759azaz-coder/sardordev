@@ -151,33 +151,35 @@ export default function ProjectsGrid() {
   };
 
   // Get project icon based on ID
-  const getProjectIcon = (id: string, color: string) => {
-    switch (id) {
-      case 'codeusta':
-        return (
-          <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-blue-950/80 border border-[#00f0ff]/30 text-[#00f0ff]">
-            {/* Pulsing ring inside */}
-            <span className="absolute inset-0 rounded-xl bg-[#00f0ff]/5 animate-pulse" />
-            <BookOpen className="w-6 h-6" />
-          </div>
-        );
-      case 'intelektai':
-        return (
-          <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-orange-950/80 border border-[#ff5e00]/30 text-[#ff5e00]">
-            <span className="absolute inset-0 rounded-xl bg-[#ff5e00]/5 animate-ping" style={{ animationDuration: '3s' }} />
-            <Brain className="w-6 h-6" />
-          </div>
-        );
-      case 'makerpay':
-        return (
-          <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-yellow-950/80 border border-yellow-500/30 text-yellow-500">
-            <span className="absolute inset-0 rounded-xl bg-yellow-500/5 animate-pulse" style={{ animationDuration: '2.5s' }} />
-            <ShieldCheck className="w-6 h-6" />
-          </div>
-        );
-      default:
-        return <Cpu className="w-6 h-6" />;
-    }
+  const getProjectIcon = (id: string, color: string, domain: string) => {
+    const logoUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+    
+    return (
+      <div className={`relative flex items-center justify-center w-12 h-12 rounded-xl bg-gray-950/95 border transition-all duration-300 group-hover:scale-105 ${
+        id === 'codeusta' ? 'border-[#00f0ff]/40' : id === 'intelektai' ? 'border-[#ff5e00]/40' : 'border-yellow-500/40'
+      }`}>
+        <span className={`absolute inset-0 rounded-xl bg-white/5 animate-pulse`} />
+        <img 
+          src={logoUrl} 
+          alt={`${id} logo`} 
+          className="w-7 h-7 object-contain rounded-lg relative z-10"
+          referrerPolicy="no-referrer"
+          onError={(e) => {
+            (e.target as HTMLImageElement).style.opacity = '0';
+          }}
+        />
+        {/* Render fallback icon behind it in case of loading */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
+          {id === 'codeusta' ? (
+            <BookOpen className="w-5 h-5 text-[#00f0ff]" />
+          ) : id === 'intelektai' ? (
+            <Brain className="w-5 h-5 text-[#ff5e00]" />
+          ) : (
+            <ShieldCheck className="w-5 h-5 text-yellow-500" />
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -266,18 +268,25 @@ export default function ProjectsGrid() {
                     
                     {/* Visual Icon Module */}
                     <div className="flex-shrink-0">
-                      {getProjectIcon(project.id, project.glowColor)}
+                      {getProjectIcon(project.id, project.glowColor, project.domain)}
                     </div>
 
                     {/* Descriptive Core Content */}
                     <div className="flex-1 text-left space-y-2">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 flex-wrap">
                         <h3 className="font-display font-bold text-lg text-white group-hover:text-white transition-colors">
                           {project.name}
                         </h3>
-                        <span className="font-mono text-xs text-gray-500">
-                          ({project.domain})
-                        </span>
+                        <a
+                          href={`https://${project.domain}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="font-mono text-xs text-[#00f0ff]/70 hover:text-[#00f0ff] underline flex items-center gap-0.5 ml-1"
+                        >
+                          {project.domain}
+                          <ArrowUpRight className="w-3.5 h-3.5 inline" />
+                        </a>
                       </div>
 
                       <p className="font-sans text-xs sm:text-sm text-gray-400 leading-relaxed">
@@ -395,11 +404,11 @@ export default function ProjectsGrid() {
                     </div>
 
                     {/* Interactive Action Control */}
-                    <div className="flex gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <button
                         onClick={() => runDiagnostics(project.id)}
                         disabled={compilingState[project.id]}
-                        className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg border font-mono text-xs font-semibold tracking-wide transition-all duration-300 ${
+                        className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg border font-mono text-xs font-semibold tracking-wide transition-all duration-300 ${
                           compilingState[project.id] 
                             ? 'bg-white/5 border-white/10 text-gray-500 cursor-not-allowed'
                             : isBlue
@@ -413,6 +422,23 @@ export default function ProjectsGrid() {
                         <RefreshCcw className={`w-3.5 h-3.5 ${compilingState[project.id] ? 'animate-spin' : ''}`} />
                         <span>RUN RE-COMPILATION TEST</span>
                       </button>
+
+                      <a
+                        href={`https://${project.domain}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg border font-mono text-xs font-semibold tracking-wide transition-all duration-300 text-center ${
+                          isBlue
+                            ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
+                            : isOrange
+                              ? 'border-[#ff5e00]/30 bg-[#ff5e00]/10 text-[#ff5e00] hover:bg-[#ff5e00]/20 glow-orange'
+                              : 'border-yellow-500/30 bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20 shadow-[0_0_15px_rgba(234,179,8,0.1)]'
+                        }`}
+                        id={`visit-live-btn-${project.id}`}
+                      >
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                        <span>{t('projects.visit_btn')}</span>
+                      </a>
                     </div>
 
                     <div className="p-3.5 rounded-lg border border-white/5 bg-white/[0.01] flex items-center gap-3">
