@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net (Default-deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitive global helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+
+    function isSystemAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'tuyginovsardor@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Rules for Admins Collection
+    match /admins/{adminId} {
+      allow get: if isSignedIn();
+      allow list, write: if isSystemAdmin();
+    }
+
+    // Rules for Messages (CRM Contact packets)
+    match /messages/{messageId} {
+      // Allow creation for anyone (even guests can submit a contact message)
+      // We enforce strict static validations to prevent Denial of Wallet and ID poisoning
+      allow create: if (
+        isValidId(messageId) &&
+        incoming().name is string && incoming().name.size() > 0 && incoming().name.size() <= 100 &&
+        incoming().email is string && incoming().email.size() > 0 && incoming().email.size() <= 100 &&
+        incoming().text is string && incoming().text.size() > 0 && incoming().text.size() <= 1000 &&
+        incoming().createdAt == request.time
+      );
+
+      // Only administrators can read or delete submitted contact messages
+      allow read, delete: if isSystemAdmin();
+      
+      // Nobody can update messages once submitted (immutability)
+      allow update: if false;
+    }
+  }
+}

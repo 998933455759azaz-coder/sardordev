@@ -1,0 +1,59 @@
+{
+  "entities": {
+    "admin": {
+      "title": "Admin Configuration",
+      "description": "Defines system administrators",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Admin email"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin"],
+          "description": "Role of the administrator"
+        }
+      },
+      "required": ["email", "role"]
+    },
+    "message": {
+      "title": "CRM Contact Message",
+      "description": "Packets representing contact messages sent via terminal or contact forms",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Sender identity name"
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Sender email address"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Payload message content"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the packet was created"
+        }
+      },
+      "required": ["name", "email", "text", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/admins/{adminId}": {
+      "schema": "admin",
+      "description": "Collection of platform administrators"
+    },
+    "/messages/{messageId}": {
+      "schema": "message",
+      "description": "Collection of incoming CRM messages and contact packets"
+    }
+  }
+}
